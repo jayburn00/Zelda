@@ -1,16 +1,26 @@
 package zelda.link;
 
 import zelda.collision.Hittable;
+import zelda.scene.*;
 import zelda.collision.Weapon;
+
 import java.awt.Rectangle;
 import java.awt.geom.Area;
+
 import zelda.engine.GObject;
+import zelda.engine.Scene;
 import zelda.karacter.Direction;
 
 /**
  * State for when link is swinging his sword.
  *
  * @author maartenhus
+ */
+
+/**
+ * 
+ * @author Jason Burn (added code to prevent teleportation across the screen when swinging the sword during a scene transition)
+ *
  */
 public class SwordState extends LinkState
 {
@@ -23,12 +33,18 @@ public class SwordState extends LinkState
 
 	private int oldX, oldY;
 	private long oldAnimationInterval;
-
+	
+	private Scene scene;
+	private String originalScene;
+	
 	public SwordState(Link link)
 	{
 		super(link);
 		name = "SwordState";
 
+		scene = game.getScene();
+		originalScene = scene.getName();
+		
 		oldX = link.getX();
 		oldY = link.getY();
 		oldAnimationInterval = link.getAnimationInterval();
@@ -95,14 +111,16 @@ public class SwordState extends LinkState
 		//sword is done swinging revert back to former state
 		if (animationCounter == link.getAnimation().length)
 		{
-			link.setY(oldY);
-			link.setX(oldX);
+			if (originalScene.equals(game.getScene().getName())) {
+				link.setY(oldY);
+				link.setX(oldX);
+				}
 			link.setAnimationInterval(oldAnimationInterval);
 			link.setCheckcollision(true);
 			link.setState(new StandState(link));
 			game.getScene().removeHitter(sword);
 		}
-		else
+		else if (originalScene.equals(game.getScene().getName())) 
 		{
 			// This section of the code corrects the position of link when he's striking.
 			// If you don't do this link appears to be moving when he swings his sword.
